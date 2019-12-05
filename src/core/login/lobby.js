@@ -13,7 +13,7 @@ import { loginFetch } from './login-fetch.js'
 const EC = elliptic.ec
 const secp256k1 = new EC('secp256k1')
 
-type Keypair = Object
+type Keypair = elliptic.ec.KeyPair
 
 // The JSON structure placed in the lobby as a reply:
 export type LobbyReply = {
@@ -49,7 +49,10 @@ function deriveSharedKey(keypair: Keypair, pubkey: Uint8Array) {
     .toArray('be')
 
   // From NIST.SP.800-56Ar2 section 5.8.1:
-  return hmacSha256([0, 0, 0, 1, ...secretX], utf8.parse('dataKey'))
+  return hmacSha256(
+    Uint8Array.from([0, 0, 0, 1, ...secretX]),
+    utf8.parse('dataKey')
+  )
 }
 
 /**
@@ -134,10 +137,10 @@ class ObservableLobby {
   }
 }
 
-function pollLobby(watcher: ObservableLobby) {
+function pollLobby(watcher: ObservableLobby): void {
   const { ai, lobbyId, keypair, onReply, onError } = watcher
 
-  return loginFetch(ai, 'GET', '/v2/lobby/' + lobbyId, {})
+  loginFetch(ai, 'GET', '/v2/lobby/' + lobbyId, {})
     .then(reply => {
       // Process any new replies that have arrived on the server:
       while (watcher.replyCount < reply.replies.length) {
@@ -169,7 +172,7 @@ export function makeLobby(
 ): Promise<LobbyInstance> {
   const { io } = ai.props
   const keypair = secp256k1.genKeyPair({ entropy: io.random(32) })
-  const pubkey = keypair.getPublic().encodeCompressed()
+  const pubkey = Uint8Array.from(keypair.getPublic().encodeCompressed())
   if (lobbyRequest.timeout == null) {
     lobbyRequest.timeout = 600
   }
@@ -209,12 +212,12 @@ export function fetchLobbyRequest(ai: ApiInput, lobbyId: string) {
 /**
  * Encrypts and sends a reply to a lobby request.
  */
-export function sendLobbyReply(
+export async function sendLobbyReply(
   ai: ApiInput,
   lobbyId: string,
   lobbyRequest: LobbyRequest,
   replyData: mixed
-) {
+): Promise<void> {
   const { io } = ai.props
   if (lobbyRequest.publicKey == null) {
     throw new TypeError('The lobby data does not have a public key')
@@ -223,7 +226,5 @@ export function sendLobbyReply(
   const request = {
     data: encryptLobbyReply(io, pubkey, replyData)
   }
-  return loginFetch(ai, 'POST', '/v2/lobby/' + lobbyId, request).then(
-    reply => null
-  )
+  await loginFetch(ai, 'POST', '/v2/lobby/' + lobbyId, request)
 }

@@ -191,8 +191,6 @@ export function makeRecovery2Kit(
   }
 }
 
-export const listRecoveryQuestionChoices = function listRecoveryQuestionChoices(
-  ai: ApiInput
-) {
+export function listRecoveryQuestionChoices(ai: ApiInput): Promise<string[]> {
   return loginFetch(ai, 'POST', '/v1/questions', {})
 }

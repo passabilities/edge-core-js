@@ -71,11 +71,11 @@ export function loadRepoStatus(
  * This function ignores folder-level deletes and overwrites,
  * but those can't happen under the current rules anyhow.
  */
-export function saveChanges(
+export async function saveChanges(
   disklet: Disklet,
   changes: { [path: string]: any }
-) {
-  return Promise.all(
+): Promise<void> {
+  await Promise.all(
     Object.keys(changes).map(path => {
       const json = changes[path]
       return json != null

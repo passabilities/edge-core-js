@@ -184,7 +184,7 @@ export function setCurrencyWalletFiat(
 /**
  * Loads the wallet fiat currency file.
  */
-function loadFiatFile(input: CurrencyWalletInput, folder) {
+function loadFiatFile(input: CurrencyWalletInput, folder): Promise<void> {
   const walletId = input.props.id
   const { dispatch } = input.props
 
@@ -203,7 +203,6 @@ function loadFiatFile(input: CurrencyWalletInput, folder) {
         type: 'CURRENCY_WALLET_FIAT_CHANGED',
         payload: { fiatCurrencyCode, walletId }
       })
-      return fiatCurrencyCode
     })
 }
 
@@ -395,22 +394,17 @@ async function loadTxFileNames(input: CurrencyWalletInput, folder) {
  */
 function loadAddressFiles(input: CurrencyWalletInput, folder) {
   // Actually load the files:
-  const allFiles = Promise.all([
-    // Legacy transaction metadata:
-    mapFiles(folder.folder('Addresses'), file =>
-      file
-        .getText()
-        .then(text => JSON.parse(text))
-        .catch(e => null)
-    )
-  ])
+  const oldFiles = mapFiles(folder.folder('Addresses'), file =>
+    file
+      .getText()
+      .then(text => JSON.parse(text))
+      .catch(e => null)
+  )
 
   // Save the results to our state:
-  return allFiles.then(allFiles => {
-    const [oldFiles] = allFiles
-
+  return oldFiles.then((oldFiles: LegacyAddressFile[]) => {
     const out: string[] = []
-    for (const json: LegacyAddressFile of oldFiles) {
+    for (const json of oldFiles) {
       if (json == null || !json.state || !json.meta) continue
       const address = json.address
       if (!address || json.state.recycleable) continue

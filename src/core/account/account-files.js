@@ -1,6 +1,6 @@
 // @flow
 
-import { type DiskletFile, mapFiles } from 'disklet'
+import { type DiskletFile, type DiskletFolder, mapFiles } from 'disklet'
 import { base16, base64 } from 'rfc4648'
 
 import {
@@ -22,6 +22,11 @@ const PLUGIN_SETTINGS_FILE = 'PluginSettings.json'
 type PluginSettingsFile = {
   userSettings?: EdgePluginMap<JsonObject>,
   swapSettings?: EdgePluginMap<SwapSettings>
+}
+
+type LoadedWalletList = {
+  walletInfos: EdgeWalletInfo[],
+  walletStates: EdgeWalletStates
 }
 
 /**
@@ -64,12 +69,7 @@ function getJsonFiles(folder) {
 /**
  * Loads the legacy wallet list from the account folder.
  */
-function loadWalletList(
-  folder
-): Promise<{
-  walletInfos: EdgeWalletInfo[],
-  walletStates: EdgeWalletStates
-}> {
+function loadWalletList(folder: DiskletFolder): Promise<LoadedWalletList> {
   return getJsonFiles(folder.folder('Wallets')).then(files => {
     const walletInfos = []
     const walletStates = {}
@@ -129,16 +129,18 @@ export async function loadAllWalletStates(
   const selfState = ai.props.state.accounts[accountId]
   const { accountWalletInfo, accountWalletInfos } = selfState
 
+  const lists: Promise<LoadedWalletList[]> = Promise.all(
+    accountWalletInfos.map(info =>
+      loadWalletList(getStorageWalletFolder(ai.props.state, info.id))
+    )
+  )
+
   // Read files from all repos:
   const [newStates, legacyLists] = await Promise.all([
     loadWalletStates(
       getStorageWalletFolder(ai.props.state, accountWalletInfo.id)
     ),
-    Promise.all(
-      accountWalletInfos.map(info =>
-        loadWalletList(getStorageWalletFolder(ai.props.state, info.id))
-      )
-    )
+    lists
   ])
 
   // Merge all that information together:
