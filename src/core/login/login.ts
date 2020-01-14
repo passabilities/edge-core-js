@@ -318,31 +318,33 @@ export function applyKit(
   const stashTree = getStash(ai, loginTree.username)
   const request = makeAuthJson(login)
   request.data = kit.server
-  return loginFetch(ai, serverMethod, serverPath, request).then(reply => {
-    const newLoginTree = updateTree(
-      loginTree,
-      login => login.loginId === loginId,
-      login => ({
-        ...login,
-        ...kit.login,
-        children: softCat(login.children, kit.login.children),
-        keyInfos: mergeKeyInfos(softCat(login.keyInfos, kit.login.keyInfos))
-      })
-    )
+  return loginFetch(ai, serverMethod, serverPath, request).then(
+    (reply: any) => {
+      const newLoginTree = updateTree(
+        loginTree,
+        login => login.loginId === loginId,
+        login => ({
+          ...login,
+          ...kit.login,
+          children: softCat(login.children, kit.login.children),
+          keyInfos: mergeKeyInfos(softCat(login.keyInfos, kit.login.keyInfos))
+        })
+      )
 
-    const newStashTree = updateTree(
-      stashTree,
-      stash => stash.loginId === loginId,
-      stash => ({
-        ...stash,
-        ...kit.stash,
-        children: softCat(stash.children, kit.stash.children),
-        keyBoxes: softCat(stash.keyBoxes, kit.stash.keyBoxes)
-      })
-    )
+      const newStashTree = updateTree(
+        stashTree,
+        stash => stash.loginId === loginId,
+        stash => ({
+          ...stash,
+          ...kit.stash,
+          children: softCat(stash.children, kit.stash.children),
+          keyBoxes: softCat(stash.keyBoxes, kit.stash.keyBoxes)
+        })
+      )
 
-    return saveStash(ai, newStashTree).then(() => newLoginTree)
-  })
+      return saveStash(ai, newStashTree).then(() => newLoginTree)
+    }
+  )
 }
 
 /**
@@ -384,7 +386,7 @@ export function syncLogin(
 
   const stashTree = getStash(ai, loginTree.username)
   const request = makeAuthJson(login)
-  return loginFetch(ai, 'POST', '/v2/login', request).then(reply => {
+  return loginFetch(ai, 'POST', '/v2/login', request).then((reply: any) => {
     const newStashTree = applyLoginReply(stashTree, login.loginKey, reply)
     const newLoginTree = makeLoginTree(
       newStashTree,
@@ -429,10 +431,12 @@ export async function resetOtp(
     userId: base64.stringify(await hashUsername(ai, username)),
     otpResetAuth: resetToken
   }
-  return loginFetch(ai, 'DELETE', '/v2/login/otp', request).then(reply => {
-    // The server returns dates as ISO 8601 formatted strings:
-    return new Date(reply.otpResetDate)
-  })
+  return loginFetch(ai, 'DELETE', '/v2/login/otp', request).then(
+    (reply: any) => {
+      // The server returns dates as ISO 8601 formatted strings:
+      return new Date(reply.otpResetDate)
+    }
+  )
 }
 
 /**
@@ -450,7 +454,7 @@ export function fetchLoginMessages(ai: ApiInput): Promise<EdgeLoginMessages> {
   const request = {
     loginIds: Object.keys(loginMap)
   }
-  return loginFetch(ai, 'POST', '/v2/messages', request).then(reply => {
+  return loginFetch(ai, 'POST', '/v2/messages', request).then((reply: any) => {
     const out: EdgeLoginMessages = {}
     for (const message of reply) {
       const username = loginMap[message.loginId]
