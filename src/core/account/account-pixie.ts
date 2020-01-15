@@ -59,7 +59,7 @@ const accountPixie: TamePixie<AccountProps> = combinePixies({
         const { log } = input.props
         const { accountWalletInfos } = input.props.selfState
 
-        const loadAllFiles = async () => {
+        async function loadAllFiles(): Promise<void> {
           await Promise.all([
             reloadPluginSettings(ai, accountId),
             loadAllWalletStates(ai, accountId)
