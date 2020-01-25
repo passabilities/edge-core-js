@@ -57,7 +57,7 @@ const withLogin2 = (
     if (json.loginAuth !== login.loginAuth) {
       return passwordErrorResponse(0)
     }
-    if (login.otpKey && !checkTotp(login.otpKey, json.otp)) {
+    if (login.otpKey != null && !checkTotp(login.otpKey, json.otp)) {
       return otpErrorResponse(OTP_RESET_TOKEN)
     }
     return server({ ...request, login })
@@ -72,7 +72,7 @@ const withLogin2 = (
     if (json.passwordAuth !== login.passwordAuth) {
       return passwordErrorResponse(0)
     }
-    if (login.otpKey && !checkTotp(login.otpKey, json.otp)) {
+    if (login.otpKey != null && !checkTotp(login.otpKey, json.otp)) {
       return otpErrorResponse(OTP_RESET_TOKEN)
     }
     return server({ ...request, login })
@@ -87,7 +87,7 @@ const withLogin2 = (
     if (json.pin2Auth !== login.pin2Auth) {
       return passwordErrorResponse(0)
     }
-    if (login.otpKey && !checkTotp(login.otpKey, json.otp)) {
+    if (login.otpKey != null && !checkTotp(login.otpKey, json.otp)) {
       return otpErrorResponse(OTP_RESET_TOKEN)
     }
     return server({ ...request, login })
@@ -109,7 +109,7 @@ const withLogin2 = (
         return passwordErrorResponse(0)
       }
     }
-    if (login.otpKey && !checkTotp(login.otpKey, json.otp)) {
+    if (login.otpKey != null && !checkTotp(login.otpKey, json.otp)) {
       return otpErrorResponse(OTP_RESET_TOKEN)
     }
     return server({ ...request, login })
@@ -177,7 +177,8 @@ function createLogin(
   const row: DbLogin = filterObject(data, loginCreateColumns)
   if (login != null) {
     const children = db.getLoginsByParent(login)
-    const appIdExists = children.find(child => child.appId === data.appId)
+    const appIdExists =
+      children.find(child => child.appId === data.appId) != null
     if (appIdExists) {
       return statusResponse(statusCodes.invalidAppId)
     }
@@ -457,10 +458,10 @@ const messagesRoute: ApiServer = pickMethod({
     const out = []
     for (const loginId of loginIds) {
       const login = db.getLoginById(loginId)
-      if (login) {
+      if (login != null) {
         out.push({
           loginId,
-          otpResetPending: !!login.otpResetDate,
+          otpResetPending: login.otpResetDate != null,
           recovery2Corrupt: false
         })
       }
