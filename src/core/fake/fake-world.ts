@@ -107,7 +107,7 @@ export function makeFakeWorld(
 
       // Find the data on the server:
       const login = fakeDb.getLoginById(loginId)
-      if (!login) throw new Error(`Cannot find user ${account.username}`)
+      if (login == null) throw new Error(`Cannot find user ${account.username}`)
 
       // Figure out which repos to use:
       const syncKeys = account.allKeys
@@ -115,7 +115,7 @@ export function makeFakeWorld(
         .map(info =>
           base16.stringify(base64.parse(info.keys.syncKey)).toLowerCase()
         )
-      const repos = {}
+      const repos: EdgeFakeUser['repos'] = {}
       for (const syncKey of syncKeys) repos[syncKey] = fakeDb.repos[syncKey]
 
       return {
