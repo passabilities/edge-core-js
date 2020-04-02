@@ -1,7 +1,7 @@
 // @flow
 
 import { number as currencyFromNumber } from 'currency-codes'
-import { mapFiles } from 'disklet'
+import { type DiskletFolder, mapFiles } from 'disklet'
 
 import { type EdgeCurrencyEngineCallbacks } from '../../../types/types.js'
 import { mergeDeeply } from '../../../util/util.js'
@@ -184,7 +184,10 @@ export function setCurrencyWalletFiat(
 /**
  * Loads the wallet fiat currency file.
  */
-function loadFiatFile(input: CurrencyWalletInput, folder): Promise<void> {
+function loadFiatFile(
+  input: CurrencyWalletInput,
+  folder: DiskletFolder
+): Promise<void> {
   const walletId = input.props.id
   const { dispatch } = input.props
 
@@ -209,7 +212,10 @@ function loadFiatFile(input: CurrencyWalletInput, folder): Promise<void> {
 /**
  * Loads the wallet name file.
  */
-function loadNameFile(input: CurrencyWalletInput, folder) {
+function loadNameFile(
+  input: CurrencyWalletInput,
+  folder: DiskletFolder
+): Promise<void> {
   const walletId = input.props.id
   const { dispatch } = input.props
 
@@ -224,7 +230,7 @@ function loadNameFile(input: CurrencyWalletInput, folder) {
       if (name != null) await renameCurrencyWallet(input, name)
       return name
     })
-    .then((name: string | null) =>
+    .then((name: string | null) => {
       dispatch({
         type: 'CURRENCY_WALLET_NAME_CHANGED',
         payload: {
@@ -232,7 +238,7 @@ function loadNameFile(input: CurrencyWalletInput, folder) {
           walletId
         }
       })
-    )
+    })
 }
 
 /**
@@ -258,7 +264,7 @@ function fetchBackupName(
 export async function loadTxFiles(
   input: CurrencyWalletInput,
   txIdHashes: string[]
-): any {
+): Promise<{ [txidHash: string]: any }> {
   const walletId = input.props.id
   const folder = getStorageWalletFolder(input.props.state, walletId)
   const { dispatch } = input.props
@@ -303,7 +309,7 @@ export async function loadTxFiles(
 async function getLegacyFileNames(
   state: RootState,
   walletId: string,
-  folder
+  folder: DiskletFolder
 ): Promise<TxFileNames> {
   const newFormatFileNames: TxFileNames = {}
   // Get the non encrypted folder
@@ -364,7 +370,10 @@ async function getLegacyFileNames(
 /**
  * Loads transaction metadata file names.
  */
-async function loadTxFileNames(input: CurrencyWalletInput, folder) {
+async function loadTxFileNames(
+  input: CurrencyWalletInput,
+  folder: DiskletFolder
+): Promise<void> {
   const walletId = input.props.id
   const { dispatch, state } = input.props
 
@@ -392,7 +401,10 @@ async function loadTxFileNames(input: CurrencyWalletInput, folder) {
 /**
  * Loads address metadata files.
  */
-function loadAddressFiles(input: CurrencyWalletInput, folder) {
+function loadAddressFiles(
+  input: CurrencyWalletInput,
+  folder: DiskletFolder
+): Promise<string[]> {
   // Actually load the files:
   const oldFiles = mapFiles(folder.folder('Addresses'), file =>
     file
@@ -422,7 +434,7 @@ function loadAddressFiles(input: CurrencyWalletInput, folder) {
 /**
  * Updates the wallet in response to data syncs.
  */
-export async function loadAllFiles(input: CurrencyWalletInput) {
+export async function loadAllFiles(input: CurrencyWalletInput): Promise<void> {
   const walletId = input.props.id
   const folder = getStorageWalletFolder(input.props.state, walletId)
 
@@ -441,7 +453,7 @@ export function setCurrencyWalletTxMetadata(
   currencyCode: string,
   metadata: any,
   fakeCallbacks: EdgeCurrencyEngineCallbacks
-) {
+): Promise<void> {
   const walletId = input.props.id
   const { dispatch, state } = input.props
 
@@ -495,7 +507,10 @@ export function setCurrencyWalletTxMetadata(
   })
 }
 
-export function setupNewTxMetadata(input: CurrencyWalletInput, tx: any) {
+export function setupNewTxMetadata(
+  input: CurrencyWalletInput,
+  tx: any
+): Promise<void> {
   const walletId = input.props.id
   const { dispatch, state } = input.props
 
